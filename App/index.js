@@ -1,12 +1,10 @@
 // Filename: index.js
 // Combined code from all files
 
-import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View, FlatList, Animated } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { SafeAreaView, FlatList, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
 
-const targetColors = ["red", "green", "blue", "yellow", "purple"];
-const initialColors = ["red", "green", "blue", "yellow", "purple", "orange", "pink", "brown", "black", "white"];
-
+// Colors Component
 const Colors = ({ colors, onColorPress }) => {
     const renderItem = ({ item }) => (
         <TouchableOpacity 
@@ -26,7 +24,65 @@ const Colors = ({ colors, onColorPress }) => {
     );
 };
 
-const App = () => {
+// Confetti Component
+const ConfettiPiece = ({ delay, duration, initialX, initialY }) => {
+    const animatedValue = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.timing(animatedValue, {
+            toValue: 1,
+            duration,
+            delay,
+            useNativeDriver: true,
+        }).start();
+    }, [animatedValue, duration, delay]);
+
+    const translateY = animatedValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 700],
+    });
+
+    const translateX = animatedValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, initialX],
+    });
+
+    return (
+        <Animated.View
+            style={[
+                confettiStyles.confetti,
+                {
+                    transform: [
+                        { translateY },
+                        { translateX },
+                    ],
+                },
+            ]}
+        />
+    );
+};
+
+const Confetti = () => {
+    return (
+        <View style={confettiStyles.container}>
+            {[...Array(50)].map((_, i) => (
+                <ConfettiPiece
+                    key={i}
+                    delay={i * 100}
+                    duration={2000}
+                    initialX={(Math.random() - 0.5) * 1000}
+                    initialY={(Math.random() - 0.5) * 1000}
+                />
+            ))}
+        </View>
+    );
+};
+
+// App Component
+const targetColors = ["red", "green", "blue", "yellow", "purple"];
+const initialColors = ["red", "green", "blue", "yellow", "purple", "orange", "pink", "brown", "black", "white"];
+
+export default function App() {
     const [collectedColors, setCollectedColors] = useState([]);
     const [showConfetti, setShowConfetti] = useState(false);
 
@@ -35,6 +91,7 @@ const App = () => {
             setCollectedColors([...collectedColors, color]);
             if (collectedColors.length + 1 === targetColors.length) {
                 setShowConfetti(true);
+                setTimeout(() => setShowConfetti(false), 3000); // Confetti disappears after 3 seconds
             }
         }
     };
@@ -49,37 +106,13 @@ const App = () => {
     );
 }
 
-const randomValue = (min, max) => Math.random() * (max - min) + min;
-
-const Confetti = () => {
-    return (
-        <View style={styles.container}>
-            {[...Array(50)].map((_, i) => (
-                <Animated.View
-                    key={i}
-                    style={[
-                        styles.confetti,
-                        {
-                            backgroundColor: `hsl(${randomValue(0, 360)}, 100%, 50%)`,
-                            top: randomValue(0, 100) + '%',
-                            left: randomValue(0, 100) + '%',
-                        },
-                    ]}
-                />
-            ))}
-        </View>
-    );
-};
-
+// Styles
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingTop: 50,
         paddingHorizontal: 20,
         backgroundColor: '#FFFFFF',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 1,
     },
     title: {
         fontSize: 24,
@@ -100,14 +133,26 @@ const styles = StyleSheet.create({
         margin: 10,
         borderRadius: 10,
     },
+});
+
+const confettiStyles = StyleSheet.create({
+    container: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1,
+    },
     confetti: {
         position: 'absolute',
         width: 10,
         height: 20,
+        backgroundColor: `hsl(${Math.random() * 360}, 100%, 50%)`,
         borderRadius: 3,
         transform: [{ rotate: '45deg' }],
         opacity: 0.7,
     },
 });
-
-export default App;
