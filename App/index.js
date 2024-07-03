@@ -1,32 +1,15 @@
 // Filename: index.js
 // Combined code from all files
 
-import React, { useState, useEffect, useRef } from 'react';
-import { SafeAreaView, FlatList, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
+// Filename begin: App.js
+import React, { useState } from 'react';
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View, FlatList, Animated } from 'react-native';
 
-// Colors Component
-const Colors = ({ colors, onColorPress }) => {
-    const renderItem = ({ item }) => (
-        <TouchableOpacity 
-            style={[styles.colorBox, { backgroundColor: item }]} 
-            onPress={() => onColorPress(item)}
-        />
-    );
+const targetColors = ["red", "green", "blue", "yellow", "purple"];
+const initialColors = ["red", "green", "blue", "yellow", "purple", "orange", "pink", "brown", "black", "white"];
 
-    return (
-        <FlatList
-            data={colors}
-            renderItem={renderItem}
-            keyExtractor={(item) => item}
-            numColumns={5}
-            contentContainerStyle={styles.list}
-        />
-    );
-};
-
-// Confetti Component
 const ConfettiPiece = ({ delay, duration, initialX, initialY }) => {
-    const animatedValue = useRef(new Animated.Value(0)).current;
+    const animatedValue = React.useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         Animated.timing(animatedValue, {
@@ -50,7 +33,7 @@ const ConfettiPiece = ({ delay, duration, initialX, initialY }) => {
     return (
         <Animated.View
             style={[
-                confettiStyles.confetti,
+                styles.confetti,
                 {
                     transform: [
                         { translateY },
@@ -64,7 +47,7 @@ const ConfettiPiece = ({ delay, duration, initialX, initialY }) => {
 
 const Confetti = () => {
     return (
-        <View style={confettiStyles.container}>
+        <View style={styles.container}>
             {[...Array(50)].map((_, i) => (
                 <ConfettiPiece
                     key={i}
@@ -78,18 +61,36 @@ const Confetti = () => {
     );
 };
 
-// App Component
-const targetColors = ["red", "green", "blue", "yellow", "purple"];
-const initialColors = ["red", "green", "blue", "yellow", "purple", "orange", "pink", "brown", "black", "white"];
+const Colors = ({ colors, onColorPress }) => {
+    const renderItem = ({ item }) => (
+        <TouchableOpacity 
+            style={[colorsStyles.colorBox, { backgroundColor: item }]} 
+            onPress={() => onColorPress(item)}
+        />
+    );
+
+    return (
+        <FlatList
+            data={colors}
+            renderItem={renderItem}
+            keyExtractor={(item) => item}
+            numColumns={5}
+            contentContainerStyle={colorsStyles.list}
+        />
+    );
+};
 
 export default function App() {
     const [collectedColors, setCollectedColors] = useState([]);
+    const [targetIndex, setTargetIndex] = useState(0);
     const [showConfetti, setShowConfetti] = useState(false);
 
     const handleColorPress = (color) => {
-        if (!collectedColors.includes(color) && targetColors.includes(color)) {
+        if (color === targetColors[targetIndex] && !collectedColors.includes(color)) {
             setCollectedColors([...collectedColors, color]);
-            if (collectedColors.length + 1 === targetColors.length) {
+            if (targetIndex < targetColors.length - 1) {
+                setTargetIndex(targetIndex + 1);
+            } else {
                 setShowConfetti(true);
                 setTimeout(() => setShowConfetti(false), 3000); // Confetti disappears after 3 seconds
             }
@@ -97,17 +98,16 @@ export default function App() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <Text style={styles.title}>Color Sorting Game</Text>
-            <Text style={styles.instructions}>Collect these colors: {targetColors.join(", ")}</Text>
+        <SafeAreaView style={appStyles.container}>
+            <Text style={appStyles.title}>Color Sorting Game</Text>
+            <Text style={appStyles.instructions}>Select this color: {targetColors[targetIndex]}</Text>
             <Colors colors={initialColors} onColorPress={handleColorPress} />
             {showConfetti && <Confetti />}
         </SafeAreaView>
     );
 }
 
-// Styles
-const styles = StyleSheet.create({
+const appStyles = StyleSheet.create({
     container: {
         flex: 1,
         paddingTop: 50,
@@ -124,6 +124,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginVertical: 20,
     },
+});
+
+const colorsStyles = StyleSheet.create({
     list: {
         alignItems: 'center',
     },
@@ -156,3 +159,4 @@ const confettiStyles = StyleSheet.create({
         opacity: 0.7,
     },
 });
+// Filename end: App.js, Colors.js, Confetti.js
